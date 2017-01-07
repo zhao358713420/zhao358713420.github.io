@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>StoneWay--石头路</title>
+  <subtitle>安安静静的写代码</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://zhao358713420.github.io/"/>
+  <updated>2017-01-07T14:41:32.471Z</updated>
+  <id>http://zhao358713420.github.io/</id>
+  
+  <author>
+    <name>ponng</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>利用python从arduino中读取信息</title>
+    <link href="http://zhao358713420.github.io/2017/01/07/cixnckodr00004kuh265ld4cp/"/>
+    <id>http://zhao358713420.github.io/2017/01/07/cixnckodr00004kuh265ld4cp/</id>
+    <published>2017-01-07T13:56:38.000Z</published>
+    <updated>2017-01-07T14:41:32.471Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近写的python程序中，有要求读取arduino开发板的信息，使得软硬件可以交互，下面是一个例子</p>
+<ol>
+<li><p>首先，我们需要烧录arduino的程序。<br><br>拿读取按键信息为例子，我们先将3，4端口设置为读取按键信号的读取端口，然后<code>Serial.begin(9600)</code>使得开发板与电脑进行连线。<br>在<code>loop()</code>函数中，每读到按键的信息，便将其打印出来，该打印出来的信息，即为python要读取的信息。<br>arduino要烧录的程序如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">int switchPin1 = 4; </div><div class="line">int switchPin2 = 3;</div><div class="line"></div><div class="line">void setup()</div><div class="line">&#123;</div><div class="line">  // initialize serial comms</div><div class="line">  pinMode(switchPin1, INPUT);</div><div class="line">  pinMode(switchPin2, INPUT);</div><div class="line">  Serial.begin(9600); </div><div class="line">&#125;</div><div class="line"></div><div class="line">void loop()</div><div class="line">&#123;</div><div class="line">  // read A0</div><div class="line">  int val1 = digitalRead(switchPin1);</div><div class="line">  // read A1</div><div class="line">  int val2 = digitalRead(switchPin2);</div><div class="line">  // print to serial</div><div class="line">  Serial.print(val1);</div><div class="line">  Serial.print(&quot; &quot;);</div><div class="line">  Serial.print(val2);</div><div class="line">  Serial.print(&quot;\n&quot;);</div><div class="line">  // wait </div><div class="line">  delay(10);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>接下来编写从开发板中读取信息的python代码。<br></p>
+</li>
+</ol>
+<ul>
+<li><p>我们首先要安装python模块serial</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$pip install pyserial</div></pre></td></tr></table></figure>
+</li>
+<li><p>连接arduino</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">import serial</div><div class="line">ser = serial.Serial(&apos;COM3&apos;, 9600)</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>该函数有两个参数，第一个为开发板port，第二个为arduino中设置的频率，两个参数要设置正确。</p>
+<ul>
+<li>读取数据<br><br>现在就可以利用ser读取数据了，代码如下：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">def get_info_from_arduino():</div><div class="line">    line = &quot;&quot;</div><div class="line">    while len(line) == 0:</div><div class="line">        line = ser.readline()</div><div class="line">    data = [int(val) for val in line.split()]</div><div class="line">    return data</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>读数据依靠<code>ser.readline()</code>这个函数完成，它会读取开发板传来的一行数据，类型为string，数据的来源对应于烧录程序中<code>loop()</code>函数下的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Serial.print(val1);</div><div class="line">Serial.print(&quot; &quot;);</div><div class="line">Serial.print(val2);</div><div class="line">Serial.print(&quot;\n&quot;);</div></pre></td></tr></table></figure></p>
+<p>然后执行python程序，按开发板上连接3，4端口的按键，就可以读取到数据。</p>
+<ol>
+<li>运行结果<br><br>两按键都不按下时：<img src="/images/0.png" alt="0"><br>两按键都按下时：<img src="/images/1.png" alt="1"></li>
+</ol>
+<h2 id="待解决问题"><a href="#待解决问题" class="headerlink" title="待解决问题"></a>待解决问题</h2><p>还没有解决向arduino中写入信号的问题，希望知道的大神留言帮忙，感激不尽。</p>
+<p>该例子的代码已上传至github，欢迎下载试用：<br><a href="https://github.com/zhao358713420/py_arduino_link" target="_blank" rel="external">https://github.com/zhao358713420/py_arduino_link</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近写的python程序中，有要求读取arduino开发板的信息，使得软硬件可以交互，下面是一个例子&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;首先，我们需要烧录arduino的程序。&lt;br&gt;&lt;br&gt;拿读取按键信息为例子，我们先将3，4端口设置为读取按键信号的读取端口，然后&lt;code
+    
+    </summary>
+    
+    
+      <category term="python" scheme="http://zhao358713420.github.io/tags/python/"/>
+    
+      <category term="arduino" scheme="http://zhao358713420.github.io/tags/arduino/"/>
+    
+  </entry>
+  
+</feed>
